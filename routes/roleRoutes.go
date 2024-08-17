@@ -3,6 +3,7 @@ package routes
 import (
 	"sana-api/controllers"
 	"sana-api/middlewares"
+
 	"github.com/gin-gonic/gin"
 )
 

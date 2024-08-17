@@ -4,6 +4,10 @@ import (
 	"sana-api/db"
 	"sana-api/routes"
 
+	// "time"
+
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -14,10 +18,17 @@ func main() {
 
 	router.Static("/public", "./public")
 
-	routes.AlbumRoutes(router)
-	routes.RoleRoute(router)
-	routes.UserRoute(router)
-	routes.AuthRoute(router)
+	router.GET("/", index)
+
+	routes.IndexRoutes(router)
+
+	//websocket
+	routes.SocketRoute(router)
 
 	router.Run("localhost:8080")
+
+}
+
+func index(c *gin.Context) {
+	c.IndentedJSON(http.StatusOK, gin.H{"Welcome": "to sana API!"})
 }
