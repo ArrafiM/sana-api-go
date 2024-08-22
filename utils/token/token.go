@@ -6,14 +6,15 @@ import (
 	"strings"
 	"time"
 
+	"sana-api/config"
+
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 )
 
 func GenerateToken(user_id uint) (string, error) {
 
-	// token_lifespan,err := strconv.Atoi(os.Getenv("TOKEN_HOUR_LIFESPAN"))
-	token_lifespan, err := strconv.Atoi("5")
+	token_lifespan, err := strconv.Atoi(config.GetEnv("TOKEN_HOUR_LIFESPAN"))
 
 	if err != nil {
 		return "", err
@@ -25,8 +26,7 @@ func GenerateToken(user_id uint) (string, error) {
 	claims["exp"] = time.Now().Add(time.Hour * time.Duration(token_lifespan)).Unix()
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	return token.SignedString([]byte("secretkeydata123"))
-	// return token.SignedString([]byte(os.Getenv("API_SECRET")))
+	return token.SignedString([]byte(config.GetEnv("API_SECRET")))
 
 }
 
@@ -34,10 +34,9 @@ func TokenValid(c *gin.Context) error {
 	tokenString := ExtractToken(c)
 	_, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
-		return []byte("secretkeydata123"), nil
-		// return []byte(os.Getenv("API_SECRET")), nil
+		return []byte(config.GetEnv("API_SECRET")), nil
 	})
 	if err != nil {
 		return err
@@ -62,10 +61,9 @@ func ExtractTokenID(c *gin.Context) (uint, error) {
 	tokenString := ExtractToken(c)
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
-		// return []byte(os.Getenv("API_SECRET")), nil
-		return []byte("secretkeydata123"), nil
+		return []byte(config.GetEnv("API_SECRET")), nil
 	})
 	if err != nil {
 		return 0, err

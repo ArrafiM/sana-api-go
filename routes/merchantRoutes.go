@@ -12,4 +12,6 @@ func MerchantRoute(r *gin.Engine) {
 	routeGroup.Use(middlewares.JwtAuthMiddleware())
 	routeGroup.GET("/", controllers.GetMerchants)
 	routeGroup.POST("/", controllers.CreateMerchant)
+	routeGroup.PUT("/:id", controllers.MerchantUpdate)
+	routeGroup.POST("/uploadlanding", controllers.MerchantUploadLandingImage)
 }

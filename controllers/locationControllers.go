@@ -41,7 +41,7 @@ func StoreLocation(c *gin.Context) {
 
 	db.CON.Where("user_id = ?", user_id).Delete(&UserLocation)
 	createLocation := models.UserLocation{
-		User_id:  user_id,
+		UserID:   user_id,
 		Location: location,
 	}
 	db.CON.Create(&createLocation)
@@ -50,26 +50,47 @@ func StoreLocation(c *gin.Context) {
 }
 
 func GetUserLocations(c *gin.Context) {
-	my := c.Query("my")
-	if my == "1" {
-		GetMyLocation(c)
-		return
-	}
+	// my := c.Query("my")
+	// if my == "1" {
+	// 	GetMyLocation(c)
+	// 	return
+	// }
 	var locations []models.UserLocation
 
-	db.CON.Model(&locations).Where("tracked", true).Preload("User").Find(&locations)
+	db.CON.Model(&locations).
+		// Where("tracked", true).
+		Preload("Merchant").
+		Preload("User").
+		Find(&locations)
 	c.JSON(http.StatusOK, gin.H{"message": "all user location", "data": locations})
 }
 
-func GetMyLocation(c *gin.Context) {
+func GetNearestPoint(c *gin.Context) {
 	// userId, err := token.ExtractTokenID(c)
+	latitude := c.Query("latitude")
+	longitude := c.Query("longitude")
+	radius := c.Query("radius")
+	page := c.Query("page")
+	pageSize := c.Query("page_size")
 
-	// if err != nil {
-	// 	c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-	// 	return
-	// }
-	var location models.CustomLocation
-	db.CON.Raw("SELECT id, user_id, ST_X(location::geometry) AS longitude, ST_Y(location::geometry) AS latitude FROM user_locations where id = 5").Scan(&location)
+	var location []models.CustomLocation
+	distance := fmt.Sprintf("ST_Distance(location, ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography) AS distance",
+		longitude, latitude)
+	db.CON.
+		Scopes(db.Paginate(page, pageSize)).
+		Select("id", "user_id",
+			"ST_X(location::geography::geometry) AS longitude",
+			"ST_Y(location::geography::geometry) AS latitude", distance).
+		Where(`ST_DWithin(
+				location,
+				ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography,
+				?
+			)`, longitude, latitude, radius).
+		Order("distance ASC").
+		Preload("User").
+		Preload("Merchant").
+		Find(&location)
+
 	// db.CON.Where("user_id = ?", userId).First(&location)
 
 	c.JSON(http.StatusOK, gin.H{"message": "your location", "data": location})
@@ -83,25 +104,44 @@ type NearestModel struct {
 	Title     string  `json:"title"`
 }
 
-var nearestData = [4]NearestModel{
+// var nearestData = [4]NearestModel{
+// 	{
+// 		ID: 1, Latitude: -6.9092216, Longitude: 107.593377,
+// 		Color: "#FF5733", Title: "Strowberry",
+// 	},
+// 	{
+// 		ID: 2, Latitude: -6.9100445, Longitude: 107.5939065,
+// 		Color: "#7e4ac2", Title: "Mie Pedas",
+// 	},
+// 	{
+// 		ID: 3, Latitude: -6.9090957, Longitude: 107.5937257,
+// 		Color: "#e359cc", Title: "Soto",
+// 	},
+// 	{
+// 		ID: 4, Latitude: -6.9097981, Longitude: 107.5936367,
+// 		Color: "#e39c59", Title: "Nasi Lemak",
+// 	},
+// }
+
+var nearestData2 = [4]NearestModel{
 	{
-		ID: 1, Latitude: -6.9092216, Longitude: 107.593377,
+		ID: 1, Latitude: -6.8548966, Longitude: 107.4561202,
 		Color: "#FF5733", Title: "Strowberry",
 	},
 	{
-		ID: 2, Latitude: -6.9100445, Longitude: 107.5939065,
+		ID: 2, Latitude: -6.8552238, Longitude: 107.4563098,
 		Color: "#7e4ac2", Title: "Mie Pedas",
 	},
 	{
-		ID: 3, Latitude: -6.9090957, Longitude: 107.5937257,
+		ID: 3, Latitude: -6.8546842, Longitude: 107.4556555,
 		Color: "#e359cc", Title: "Soto",
 	},
 	{
-		ID: 4, Latitude: -6.9097981, Longitude: 107.5936367,
+		ID: 4, Latitude: -6.8559377, Longitude: 107.4564284,
 		Color: "#e39c59", Title: "Nasi Lemak",
 	},
 }
 
 func NearestLocations(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"message": "your nearest location", "data": nearestData})
+	c.JSON(http.StatusOK, gin.H{"message": "your nearest location", "data": nearestData2})
 }

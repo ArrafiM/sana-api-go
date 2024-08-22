@@ -3,6 +3,7 @@ package controllers
 import (
 	"fmt"
 	"log"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"sana-api/db"
@@ -21,9 +22,7 @@ func UploadFile(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	file, _ := c.FormFile("picture")
-	file.Filename = fmt.Sprint(time.Now().UnixNano()) + "-" + file.Filename
-	log.Println(file.Filename)
+
 	var user models.User
 	if err := db.CON.First(&user, user_id).Error; err != nil {
 		switch err {
@@ -36,19 +35,37 @@ func UploadFile(c *gin.Context) {
 		}
 	}
 	if user.Picture != "" {
-		e := os.Remove("public/" + user.Picture)
-		if e != nil {
-			log.Fatal(e)
-		}
+		RemoveFile(user.Picture)
 	}
 
-	path := "pictureuser/" + file.Filename
-	c.SaveUploadedFile(file, "public/"+path)
+	file, _ := c.FormFile("picture")
 
-	if db.CON.Model(&user).Where("id = ?", user_id).Update("picture", path).RowsAffected == 0 {
+	path := "pictureuser"
+
+	url := fileUrl(file, path)
+	c.SaveUploadedFile(file, "public/"+url)
+
+	if db.CON.Model(&user).Where("id = ?", user_id).Update("picture", url).RowsAffected == 0 {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "user not updated"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "success", "data": file.Filename})
+	c.JSON(http.StatusOK, gin.H{"message": "success", "data": url})
+}
+
+func fileUrl(file *multipart.FileHeader, path string) string {
+	file.Filename = fmt.Sprint(time.Now().UnixNano()) + "-" + file.Filename
+	log.Println(file.Filename)
+	url := path + "/" + file.Filename
+
+	return url
+}
+
+func RemoveFile(filename string) int {
+	e := os.Remove("public/" + filename)
+	if e != nil {
+		log.Fatal(e)
+		return 0
+	}
+	return 1
 }

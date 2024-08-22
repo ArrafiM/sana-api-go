@@ -12,5 +12,5 @@ func LocationRoutes(r *gin.Engine) {
 	routeGroup.Use(middlewares.JwtAuthMiddleware())
 	routeGroup.POST("/", controllers.StoreLocation)
 	routeGroup.GET("/", controllers.GetUserLocations)
-	routeGroup.GET("/nearest", controllers.NearestLocations)
+	routeGroup.GET("/nearest", controllers.GetNearestPoint)
 }
