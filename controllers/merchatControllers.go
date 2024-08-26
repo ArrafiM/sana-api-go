@@ -16,10 +16,25 @@ import (
 
 func GetMerchants(c *gin.Context) {
 	var merchant []models.MerchantUser
-	db.CON.Preload("merchant").
+	db.CON.Preload("User").
 		Preload("LandingImages").
 		Find(&merchant)
 	c.JSON(http.StatusOK, gin.H{"message": "All merchant data", "data": merchant})
+}
+
+func GetMerchantId(c *gin.Context) {
+	id := c.Param("id")
+	// Fetch existing merchant
+	var existingMerchant models.MerchantDtl
+	if err := db.CON.
+		Preload("User").
+		Preload("LandingImages").
+		Preload("Merchandise").
+		First(&existingMerchant, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Merchant not found"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "detail merchant data", "data": existingMerchant})
 }
 
 func CreateMerchant(c *gin.Context) {
@@ -28,7 +43,7 @@ func CreateMerchant(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-
+	log.Printf(payload.Name)
 	userId, err := token.ExtractTokenID(c)
 
 	if err != nil {

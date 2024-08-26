@@ -11,4 +11,5 @@ func IndexRoutes(r *gin.Engine) {
 	AuthRoute(r)
 	LocationRoutes(r)
 	MerchantRoute(r)
+	MerchandiseRoute(r)
 }

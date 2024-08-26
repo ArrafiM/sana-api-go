@@ -35,6 +35,15 @@ func (MerchantUser) TableName() string {
 	return "merchants"
 }
 
+type MerchantDtl struct {
+	MerchantUser
+	Merchandise *[]Merchandise `json:"merchandise" gorm:"foreignKey:merchant_id"`
+}
+
+func (MerchantDtl) TableName() string {
+	return "merchants"
+}
+
 type MerchantUpdate struct {
 	UserID      *uint                 `form:"user_id"`
 	Name        *string               `form:"name"`
