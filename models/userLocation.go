@@ -14,10 +14,10 @@ type UserLocation struct {
 
 type CustomLocation struct {
 	gorm.Model
-	UserID    uint    `json:"user_id"`
-	Latitude  string  `json:"latitude"`
-	Longitude string  `json:"longitude"`
-	Distance  *string `json:"distance"`
+	UserID    uint     `json:"user_id"`
+	Latitude  float64  `json:"latitude"`
+	Longitude float64  `json:"longitude"`
+	Distance  *float64 `json:"distance"`
 	UserMerchant
 }
 

@@ -14,6 +14,7 @@ type Merchant struct {
 	Description string    `json:"description"`
 	Status      string    `json:"status" gorm:"default:'active'"`
 	Picture     string    `json:"picture"`
+	Color       string    `json:"color"`
 	CreatedAt   time.Time `json:"-"`
 	UpdatedAt   time.Time `json:"-" gorm:"autoUpdateTime"`
 }
