@@ -45,8 +45,12 @@ func GetMyMerchant(c *gin.Context) {
 		return
 	}
 	println("user_id", user_id)
-	var merchant models.Merchant
-	if err := db.CON.Where("user_id = ?", user_id).First(&merchant).Error; err != nil {
+	var merchant models.MerchantDtl
+	if err := db.CON.Where("user_id = ?", user_id).
+		Preload("User").
+		Preload("LandingImages").
+		Preload("Merchandise").
+		First(&merchant).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Merchant not found", "data": nil})
 		return
 	}
