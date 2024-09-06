@@ -37,6 +37,22 @@ func GetMerchantId(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "detail merchant data", "data": existingMerchant})
 }
 
+func GetMyMerchant(c *gin.Context) {
+	user_id, err := token.ExtractTokenID(c)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	println("user_id", user_id)
+	var merchant models.Merchant
+	if err := db.CON.Where("user_id = ?", user_id).First(&merchant).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Merchant not found", "data": nil})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Your merchant data", "data": merchant})
+}
+
 func CreateMerchant(c *gin.Context) {
 	var payload models.MerchantCreate
 	if err := c.ShouldBind(&payload); err != nil {

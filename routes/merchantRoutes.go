@@ -15,4 +15,5 @@ func MerchantRoute(r *gin.Engine) {
 	routeGroup.POST("", controllers.CreateMerchant)
 	routeGroup.PUT("/:id", controllers.MerchantUpdate)
 	routeGroup.POST("/uploadlanding", controllers.MerchantUploadLandingImage)
+	r.GET("/api/mymerchants", controllers.GetMyMerchant)
 }
