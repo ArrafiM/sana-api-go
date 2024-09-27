@@ -12,4 +12,8 @@ func IndexRoutes(r *gin.Engine) {
 	LocationRoutes(r)
 	MerchantRoute(r)
 	MerchandiseRoute(r)
+
+	//websocketchat
+	SocketChatRoute(r)
+	go hub.run()
 }

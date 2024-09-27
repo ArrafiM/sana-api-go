@@ -11,11 +11,11 @@ import (
 
 func SocketRoute(r *gin.Engine) {
 	//websoket
-	r.GET("/ws", socket)
+	r.GET("/ws1", socket)
 	// r.GET()
 }
 
-var upgrader = websocket.Upgrader{
+var upgrader1 = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
 	CheckOrigin: func(c *http.Request) bool {
@@ -24,7 +24,7 @@ var upgrader = websocket.Upgrader{
 }
 
 func socket(c *gin.Context) {
-	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+	conn, err := upgrader1.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		return
 	}
