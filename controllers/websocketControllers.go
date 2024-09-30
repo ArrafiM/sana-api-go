@@ -1,4 +1,4 @@
-package routes
+package controllers
 
 import (
 	// "fmt"
@@ -8,12 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 )
-
-func SocketChatRoute(r *gin.Engine) {
-	//websoket
-	r.GET("/ws", handleWebSocket)
-	// r.GET()
-}
 
 // Menggunakan upgrader untuk meng-upgrade HTTP connection menjadi WebSocket connection
 var upgrader = websocket.Upgrader{
@@ -50,7 +44,7 @@ var hub = Hub{
 }
 
 // Handle WebSocket connection
-func handleWebSocket(c *gin.Context) {
+func HandleWebSocket(c *gin.Context) {
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		log.Println(err)
@@ -113,34 +107,30 @@ func (c *Client) writePump() {
 }
 
 // Menjalankan hub untuk mengelola client dan pesan
-func (h *Hub) run() {
+func RunHub() {
 	for {
 		select {
-		case client := <-h.register:
-			h.clients[client.id] = client
-		case client := <-h.unregister:
-			if _, ok := h.clients[client.id]; ok {
-				delete(h.clients, client.id)
+		case client := <-hub.register:
+			hub.clients[client.id] = client
+		case client := <-hub.unregister:
+			if _, ok := hub.clients[client.id]; ok {
+				delete(hub.clients, client.id)
 				close(client.send)
 			}
-		case message := <-h.broadcast:
+		case message := <-hub.broadcast:
 			// Kirim pesan ke penerima tertentu
-			if receiver, ok := h.clients[message.ReceiverID]; ok {
+			if receiver, ok := hub.clients[message.ReceiverID]; ok {
 				select {
 				case receiver.send <- []byte(message.Content):
 				default:
 					close(receiver.send)
-					delete(h.clients, message.ReceiverID)
+					delete(hub.clients, message.ReceiverID)
 				}
 			}
 		}
 	}
 }
 
-// Simpan pesan ke PostgreSQL
-// func saveMessage(msg Message) {
-// 	_, err := db.Exec("INSERT INTO messages (sender_id, receiver_id, content) VALUES ($1, $2, $3)", msg.SenderID, msg.ReceiverID, msg.Content)
-// 	if err != nil {
-// 		log.Println("Error saving message:", err)
-// 	}
-// }
+func BroadcastMessage(msg Message){
+	hub.broadcast <- msg
+}

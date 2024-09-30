@@ -23,8 +23,7 @@ func main() {
 	routes.IndexRoutes(router)
 
 	//websocket
-	routes.SocketRoute(router)
-
+	// routes.SocketRoute(router)
 	router.Run("localhost:8080")
 
 }
