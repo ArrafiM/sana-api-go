@@ -8,6 +8,8 @@ import (
 	"sana-api/db"
 	"sana-api/utils/token"
 
+	"gorm.io/gorm"
+
 	"github.com/gin-gonic/gin"
 	// "gorm.io/gorm/clause"
 	// "gorm.io/gorm"
@@ -72,7 +74,7 @@ func GetNearestPoint(c *gin.Context) {
 	radius := c.Query("radius")
 	page := c.Query("page")
 	pageSize := c.Query("page_size")
-
+	merchandise := c.Query("merchandise")
 	var location []models.CustomLocation
 	distance := fmt.Sprintf("ST_Distance(location, ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography) AS distance",
 		longitude, latitude)
@@ -88,7 +90,16 @@ func GetNearestPoint(c *gin.Context) {
 			)`, longitude, latitude, radius).
 		Order("distance ASC").
 		Preload("User").
-		Preload("Merchant").
+		Preload("Merchant", func(db *gorm.DB) *gorm.DB {
+			if merchandise == "true" {
+				return db.Preload("Merchandise", func(mc *gorm.DB) *gorm.DB {
+					return mc.Select("id", "name", "picture", "price", "merchant_id").
+						Limit(3)
+				},
+				)
+			}
+			return db
+		}).
 		Find(&location)
 
 	// db.CON.Where("user_id = ?", userId).First(&location)

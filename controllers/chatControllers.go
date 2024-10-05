@@ -13,15 +13,44 @@ import (
 )
 
 func AllChat(c *gin.Context) {
-	var roles []models.Chat
-	db.CON.Find(&roles)
-	c.JSON(http.StatusOK, gin.H{"message": "all Chats", "data": roles})
+	var chats []models.Chat
+	roomid := c.Query("roomid")
+	page := c.Query("page")
+	pageSize := c.Query("page_size")
+	readMsg := c.Query("readmsg")
+	if roomid != "" {
+		db.CON.Where("chatroom_id = ?", roomid).
+			Scopes(db.Paginate(page, pageSize)).
+			Order("created_at desc").
+			Find(&chats)
+	} else {
+		db.CON.Find(&chats)
+	}
+	if readMsg == "true" && roomid != "" {
+		userId, _ := token.ExtractTokenID(c)
+		roomId, _ := strconv.ParseUint(roomid, 10, 32)
+		ReadMsg(userId, uint(roomId))
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "all Chats", "data": chats})
+}
+
+func ReadMsg(userId uint, roomId uint) {
+	db.CON.Model(&models.Chat{}).
+		Where("is_read = ? and receiver_id = ? and chatroom_id = ?", false, userId, roomId).
+		Update("is_read", true)
+	msg := Message{
+		SenderID:   fmt.Sprintf("user%s", strconv.Itoa(int(userId))),
+		ReceiverID: fmt.Sprintf("user%s", strconv.Itoa(int(userId))),
+		Content:    "readMsg[chat]",
+	}
+	BroadcastMessage(msg)
 }
 
 func ChatRoom(c *gin.Context) {
 	userId, _ := token.ExtractTokenID(c)
 	page := c.Query("page")
 	pageSize := c.Query("page_size")
+	unreadMsg := c.Query("unreadmsg")
 	var chatRoom []models.ChatRoomList
 	db.CON.Model(&chatRoom).
 		Select(`chat_rooms.*, latest_chats.created_at as newchat_at,
@@ -54,16 +83,27 @@ func ChatRoom(c *gin.Context) {
 			if id == int64(userId) {
 				db.CON.First(&userData, id)
 				chatRoom[i].MyData = map[string]any{
+					"id":      userData.ID,
 					"name":    userData.Name,
 					"picture": userData.Picture,
 				}
 			} else {
 				db.CON.First(&userData, id)
 				chatRoom[i].ReceiverData = map[string]any{
+					"id":      userData.ID,
 					"name":    userData.Name,
 					"picture": userData.Picture,
 				}
 			}
+		}
+		if unreadMsg == "true" {
+			var chats models.Chat
+			var count int64
+			var chatroomId = chatRoom[i].ID
+			db.CON.Model(&chats).
+				Where("is_read = ? and sender_id != ? and chatroom_id = ?", false, userId, chatroomId).
+				Count(&count)
+			chatRoom[i].UnreadMsg = count
 		}
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "all Chat Rooms", "data": chatRoom, "unread": totalunread})
@@ -105,13 +145,18 @@ func StoreChat(c *gin.Context) {
 		ChatroomId: uint(roomid),
 		Message:    chat.Message,
 		SenderId:   userId,
+		ReceiverId: uint(chat.ReceiverId),
 	}
 	db.CON.Create(&newChat)
 	msg := Message{
 		SenderID:   fmt.Sprintf("user%s", strconv.Itoa(int(userId))),
 		ReceiverID: fmt.Sprintf("user%s", strconv.Itoa(int(chat.ReceiverId))),
-		Content:    chat.Message,
+		Content:    fmt.Sprintf("chatRoomId%s", strconv.Itoa(int(roomid))),
 	}
+	BroadcastMessage(msg)
+	//send back to sender
+	msg.ReceiverID = fmt.Sprintf("user%s", strconv.Itoa(int(userId)))
+	msg.SenderID = fmt.Sprintf("user%s", strconv.Itoa(int(chat.ReceiverId)))
 	BroadcastMessage(msg)
 	c.JSON(http.StatusOK, gin.H{"message": "chat message stored", "data": newChat})
 }

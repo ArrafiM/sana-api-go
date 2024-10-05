@@ -14,6 +14,8 @@ CREATE TABLE IF NOT EXISTS chats (
     FOREIGN KEY (chatroom_id) REFERENCES chat_rooms(id) ON DELETE CASCADE,
     sender_id BIGINT NOT NULL,
     FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE,
+    receiver_id BIGINT NOT NULL,
+    FOREIGN KEY (receiver_id) REFERENCES users(id) ON DELETE CASCADE,
     message TEXT,
     is_read BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,

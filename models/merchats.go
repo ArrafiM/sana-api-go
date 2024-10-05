@@ -9,14 +9,15 @@ import (
 
 type Merchant struct {
 	gorm.Model
-	UserID      uint      `json:"user_id"`
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	Status      string    `json:"status" gorm:"default:'active'"`
-	Picture     string    `json:"picture"`
-	Color       string    `json:"color"`
-	CreatedAt   time.Time `json:"-"`
-	UpdatedAt   time.Time `json:"-" gorm:"autoUpdateTime"`
+	UserID      uint           `json:"user_id"`
+	Name        string         `json:"name"`
+	Description string         `json:"description"`
+	Status      string         `json:"status" gorm:"default:'active'"`
+	Picture     string         `json:"picture"`
+	Color       string         `json:"color"`
+	CreatedAt   time.Time      `json:"-"`
+	UpdatedAt   time.Time      `json:"-" gorm:"autoUpdateTime"`
+	Merchandise *[]Merchandise `json:"merchandise" gorm:"foreignKey:merchant_id"`
 }
 
 type MerchantCreate struct {

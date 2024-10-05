@@ -49,7 +49,12 @@ func VerifyPassword(password, hashedPassword string) error {
 	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 }
 
-func LoginCheck(email string, password string) (string, error) {
+type LoginResponse struct {
+	Token string `json:"token"`
+	UserId uint `json:"user_id"`
+}
+
+func LoginCheck(email string, password string) (LoginResponse, error) {
 
 	var err error
 
@@ -58,21 +63,25 @@ func LoginCheck(email string, password string) (string, error) {
 	err = db.CON.Model(User{}).Where("email = ?", email).Take(&u).Error
 
 	if err != nil {
-		return "", err
+		return LoginResponse{}, err
 	}
 
 	err = VerifyPassword(password, u.Password)
 
 	if err != nil && err == bcrypt.ErrMismatchedHashAndPassword {
-		return "", err
+		return LoginResponse{}, err
 	}
 
 	token, err := token.GenerateToken(u.ID)
 
 	if err != nil {
-		return "", err
+		return LoginResponse{}, err
 	}
 
-	return token, nil
+	res := LoginResponse{
+		Token: token,
+		UserId: u.ID,
+	}
+	return res, nil
 
 }
