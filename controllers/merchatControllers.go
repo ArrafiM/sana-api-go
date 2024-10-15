@@ -96,6 +96,19 @@ func MerchantUploadLandingImage(c *gin.Context) {
 	// }
 	// Multipart form
 	form, _ := c.MultipartForm()
+	val := form.Value["remove_id"]
+	var merchantImage []models.MerchantLandingImage
+
+	merchantId, _ := strconv.Atoi(form.Value["merchant_id"][0])
+	db.CON.Where("merchant_id = ? and id IN ?", merchantId, val).Find(&merchantImage)
+	//remove selected old image
+	for _, image := range merchantImage {
+		if image.Url != "" {
+			RemoveFile(image.Url)
+			db.CON.Delete(&image)
+		}
+	}
+	//upload new image
 	files := form.File["files[]"]
 	var images []models.MerchantLandingImage
 	for _, file := range files {
@@ -104,10 +117,6 @@ func MerchantUploadLandingImage(c *gin.Context) {
 		path := "merchantlanding"
 		url := path + "/" + file.Filename
 		c.SaveUploadedFile(file, "public/"+url)
-		merchantId, err := strconv.Atoi(form.Value["merchant_id"][0])
-		if err != nil {
-			continue
-		}
 		images = append(images, models.MerchantLandingImage{
 			MerchantId: uint(merchantId),
 			Url:        url,

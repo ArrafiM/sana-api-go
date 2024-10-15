@@ -47,3 +47,11 @@ type MerchandiseUploadImages struct {
 	MerchandiseID string                 `form:"merchandise_id" binding:"required"`
 	Files         []multipart.FileHeader `form:"files[]" binding:"required"`
 }
+
+type MerchandiseUpdate struct {
+	Name        *string               `form:"name"`
+	Description *string               `form:"description"`
+	Price       *string               `form:"price"`
+	MerchantID  *string               `form:"merchant_id"`
+	Picture     *multipart.FileHeader `form:"picture"`
+}

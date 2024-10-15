@@ -13,6 +13,7 @@ func MerchandiseRoute(r *gin.Engine) {
 	routeGroup.GET("", controllers.GetMerchandises)
 	routeGroup.GET("/:id", controllers.GetMerchandiseId)
 	routeGroup.POST("", controllers.CreateMerchandise)
-	// routeGroup.PUT("/:id", controllers.MerchantUpdate)
+	routeGroup.PUT("/:id", controllers.MerchandiseUpdate)
+	routeGroup.DELETE("/:id", controllers.MerchandiseDelete)
 	routeGroup.POST("/uploadimages", controllers.MerchandiseUploadImages)
 }
