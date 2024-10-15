@@ -13,4 +13,5 @@ func LocationRoutes(r *gin.Engine) {
 	routeGroup.POST("/", controllers.StoreLocation)
 	routeGroup.GET("/", controllers.GetUserLocations)
 	routeGroup.GET("/nearest", controllers.GetNearestPoint)
+	routeGroup.GET("/new", controllers.NewLocation)
 }

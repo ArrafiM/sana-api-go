@@ -31,9 +31,10 @@ type Hub struct {
 
 // Message struct untuk mewakili pesan yang dikirim
 type Message struct {
-	SenderID   string `json:"sender_id"`
-	ReceiverID string `json:"receiver_id"`
-	Content    string `json:"content"`
+	SenderID   string  `json:"sender_id"`
+	ReceiverID string  `json:"receiver_id"`
+	Content    string  `json:"content"`
+	Location   *string `json:"location"`
 }
 
 var hub = Hub{
@@ -85,12 +86,16 @@ func (c *Client) readPump() {
 			break
 		}
 		msg.SenderID = c.id
-
+		if msg.Content == "postLocation" {
+			log.Printf("sender f: %s", msg.SenderID)
+			log.Printf("content f: %s", msg.Content)
+			bakcgroundLocation(msg)
+		}
 		// Simpan pesan ke database
 		// saveMessage(msg)
 
 		// Kirim pesan ke client tujuan
-		hub.broadcast <- msg
+		// hub.broadcast <- msg
 	}
 }
 
@@ -131,6 +136,6 @@ func RunHub() {
 	}
 }
 
-func BroadcastMessage(msg Message){
+func BroadcastMessage(msg Message) {
 	hub.broadcast <- msg
 }

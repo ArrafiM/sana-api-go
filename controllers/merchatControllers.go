@@ -84,6 +84,7 @@ func CreateMerchant(c *gin.Context) {
 	}
 
 	db.CON.Create(&merchant)
+	broadCastMerchant(userId)
 	c.JSON(http.StatusCreated, gin.H{"message": "Merchant created", "data": merchant})
 }
 
@@ -171,5 +172,16 @@ func MerchantUpdate(c *gin.Context) {
 		return
 	}
 
+	broadCastMerchant(existingMerchant.UserID)
+
 	c.JSON(http.StatusOK, gin.H{"message": "merchant updated", "data": existingMerchant})
+}
+
+func broadCastMerchant(userId uint) {
+	msg := Message{
+		SenderID:   fmt.Sprintf("user%s", strconv.Itoa(int(userId))),
+		ReceiverID: fmt.Sprintf("user%s", strconv.Itoa(int(userId))),
+		Content:    fmt.Sprintf("myMerchant%s", strconv.Itoa(int(userId))),
+	}
+	BroadcastMessage(msg)
 }

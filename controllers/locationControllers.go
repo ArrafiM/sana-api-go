@@ -2,11 +2,14 @@ package controllers
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"sana-api/models"
 
 	"sana-api/db"
 	"sana-api/utils/token"
+
+	"time"
 
 	"gorm.io/gorm"
 
@@ -113,4 +116,41 @@ type NearestModel struct {
 	Longitude float64 `json:"longitude"`
 	Color     string  `json:"color"`
 	Title     string  `json:"title"`
+}
+
+type LocationLatLong struct {
+	Lat  string
+	Long string
+}
+
+func NewLocation(c *gin.Context) {
+	lat := c.Query("lat")
+	long := c.Query("long")
+	data := LocationLatLong{Lat: lat, Long: long}
+	c.JSON(http.StatusOK, gin.H{"message": "your location", "data": data})
+}
+
+func postLocation(msg Message) {
+	senderId := msg.SenderID
+	if msg.Location != nil {
+		log.Printf("location msg socket: %s", *msg.Location)
+	}
+	log.Printf("job started delay 1 menit userId: %s", senderId)
+	time.Sleep(1 * time.Minute)
+	log.Printf("bakcground job id: %s, finish", senderId)
+	broadCastLocation(senderId)
+}
+
+func bakcgroundLocation(msg Message) {
+	fmt.Println("Starting background job with delay...")
+	go func() { postLocation(msg) }()
+}
+
+func broadCastLocation(userId string) {
+	msg := Message{
+		SenderID:   userId,
+		ReceiverID: userId,
+		Content:    fmt.Sprintf("postMyLocation%s", userId),
+	}
+	BroadcastMessage(msg)
 }

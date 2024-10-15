@@ -10,6 +10,7 @@ import (
 	"strconv"
 
 	"sana-api/db"
+	"sana-api/utils/token"
 
 	"github.com/gin-gonic/gin"
 )
@@ -36,6 +37,7 @@ func GetMerchandiseId(c *gin.Context) {
 }
 
 func CreateMerchandise(c *gin.Context) {
+	userId, _ := token.ExtractTokenID(c)
 	var payload models.MerchandiseCreate
 	if err := c.ShouldBind(&payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -60,6 +62,7 @@ func CreateMerchandise(c *gin.Context) {
 	}
 
 	db.CON.Create(&merchandise)
+	broadCastMerchant(userId)
 	c.JSON(http.StatusCreated, gin.H{"message": "Merchandise created", "data": merchandise})
 }
 
