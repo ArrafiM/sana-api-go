@@ -78,8 +78,9 @@ func GetNearestPoint(c *gin.Context) {
 	page := c.Query("page")
 	pageSize := c.Query("page_size")
 	merchandise := c.Query("merchandise")
+	itemName := c.Query("itemname")
 	var location []models.CustomLocation
-	distance := fmt.Sprintf("ST_Distance(location, ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography) AS distance",
+	distance := fmt.Sprintf("ST_Distance(location, ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography)/1000 AS distance",
 		longitude, latitude)
 	db.CON.
 		Scopes(db.Paginate(page, pageSize)).
@@ -96,6 +97,11 @@ func GetNearestPoint(c *gin.Context) {
 		Preload("Merchant", func(db *gorm.DB) *gorm.DB {
 			if merchandise == "true" {
 				return db.Preload("Merchandise", func(mc *gorm.DB) *gorm.DB {
+					if itemName != "" {
+						return mc.Where("name ilike ?", "%"+itemName+"%").
+							Select("id", "name", "picture", "price", "merchant_id").
+							Limit(3)
+					}
 					return mc.Select("id", "name", "picture", "price", "merchant_id").
 						Limit(3)
 				},
@@ -118,16 +124,30 @@ type NearestModel struct {
 	Title     string  `json:"title"`
 }
 
-type LocationLatLong struct {
-	Lat  string
-	Long string
-}
-
 func NewLocation(c *gin.Context) {
 	lat := c.Query("lat")
 	long := c.Query("long")
-	data := LocationLatLong{Lat: lat, Long: long}
-	c.JSON(http.StatusOK, gin.H{"message": "your location", "data": data})
+	user_id, _ := token.ExtractTokenID(c)
+	location := fmt.Sprintf("POINT(%s %s)", long, lat)
+	var UserLocation models.UserLocation
+
+	db.CON.Where("user_id = ?", user_id).Delete(&UserLocation)
+	createLocation := models.UserLocation{
+		UserID:   user_id,
+		Location: location,
+	}
+	db.CON.Create(&createLocation)
+
+	c.JSON(http.StatusOK, gin.H{"message": "user location added", "data": createLocation})
+}
+
+func broadCastLocation(userId string) {
+	msg := Message{
+		SenderID:   userId,
+		ReceiverID: userId,
+		Content:    fmt.Sprintf("postMyLocationuser%s", userId),
+	}
+	BroadcastMessage(msg)
 }
 
 func postLocation(msg Message) {
@@ -144,13 +164,4 @@ func postLocation(msg Message) {
 func bakcgroundLocation(msg Message) {
 	fmt.Println("Starting background job with delay...")
 	go func() { postLocation(msg) }()
-}
-
-func broadCastLocation(userId string) {
-	msg := Message{
-		SenderID:   userId,
-		ReceiverID: userId,
-		Content:    fmt.Sprintf("postMyLocation%s", userId),
-	}
-	BroadcastMessage(msg)
 }
