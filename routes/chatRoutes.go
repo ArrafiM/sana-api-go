@@ -13,4 +13,5 @@ func ChatRoutes(r *gin.Engine) {
 	routeGroup.GET("", controllers.AllChat)
 	routeGroup.POST("", controllers.StoreChat)
 	r.GET("/api/chatrooms", controllers.ChatRoom)
+	r.GET("/api/chatroom", controllers.GetRoom)
 }

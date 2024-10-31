@@ -90,7 +90,7 @@ func MerchandiseUploadImages(c *gin.Context) {
 		file.Filename = fmt.Sprint(time.Now().UnixNano()) + "-" + file.Filename
 		log.Println(file.Filename)
 		path := "merchandiseimages"
-		url := path + "/" + file.Filename
+		url := fileUrl(file, path)
 		c.SaveUploadedFile(file, "public/"+url)
 		if err != nil {
 			continue
@@ -149,7 +149,15 @@ func MerchandiseUpdate(c *gin.Context) {
 			if existingField.Kind() == reflect.Ptr {
 				existingField.Set(field)
 			} else {
-				existingField.Set(reflect.Indirect(field))
+				if merchandiseType.Field(i).Name == "Price" {
+					price, _ := strconv.Atoi(field.Elem().String())
+					existingField.SetInt(int64(price))
+				} else if merchandiseType.Field(i).Name == "MerchantID" {
+					mId, _ := strconv.Atoi(field.Elem().String())
+					existingField.SetInt(int64(mId))
+				} else {
+					existingField.Set(reflect.Indirect(field))
+				}
 			}
 		}
 	}
@@ -180,4 +188,12 @@ func MerchandiseDelete(c *gin.Context) {
 	//delete permanently
 	db.CON.Unscoped().Delete(&merchandise)
 	c.JSON(http.StatusNotFound, gin.H{"error": "Merchandise deleted", "data": true})
+}
+
+func MerchandiseExplore(c * gin.Context){
+	var merchant []models.Merchant
+
+	db.CON.Preload("Merchandise").Find(&merchant)
+
+	c.JSON(http.StatusOK, gin.H{"message":"explore data", "data":merchant})
 }

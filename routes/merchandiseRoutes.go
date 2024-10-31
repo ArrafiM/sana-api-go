@@ -16,4 +16,8 @@ func MerchandiseRoute(r *gin.Engine) {
 	routeGroup.PUT("/:id", controllers.MerchandiseUpdate)
 	routeGroup.DELETE("/:id", controllers.MerchandiseDelete)
 	routeGroup.POST("/uploadimages", controllers.MerchandiseUploadImages)
+	routeExplore := r.Group("/api/merchandise-explore")
+	routeExplore.Use(middlewares.JwtAuthMiddleware())
+	routeExplore.GET("",controllers.MerchandiseExplore)
+
 }

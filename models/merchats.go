@@ -17,7 +17,7 @@ type Merchant struct {
 	Color       string         `json:"color"`
 	CreatedAt   time.Time      `json:"-"`
 	UpdatedAt   time.Time      `json:"-" gorm:"autoUpdateTime"`
-	Merchandise *[]Merchandise `json:"merchandise" gorm:"foreignKey:merchant_id"`
+	Merchandise *[]Merchandise `json:"merchandise" gorm:"foreignKey:MerchantID"`
 }
 
 type MerchantCreate struct {

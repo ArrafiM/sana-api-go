@@ -9,6 +9,7 @@ import (
 	"sana-api/models"
 	"sana-api/utils/token"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -88,24 +89,39 @@ func CreateMerchant(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"message": "Merchant created", "data": merchant})
 }
 
+func strToArray(str string) []int {
+	var intArr []int
+	if str != "" {
+		str = strings.Trim(str, "[]")
+		strArr := strings.Split(str, ",")
+		// Konversi setiap elemen string menjadi integer
+		for _, s := range strArr {
+			num, _ := strconv.Atoi(strings.TrimSpace(s)) // Hapus spasi dan konversi
+			intArr = append(intArr, num)
+		}
+		return intArr
+	}
+	return intArr
+}
+
 func MerchantUploadLandingImage(c *gin.Context) {
-	// var payload models.MerchantLandingImageCreate
-	// if err := c.ShouldBindJSON(&payload); err != nil {
-	// 	c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-	// 	return
-	// }
+	userId, _ := token.ExtractTokenID(c)
 	// Multipart form
 	form, _ := c.MultipartForm()
-	val := form.Value["remove_id"]
-	var merchantImage []models.MerchantLandingImage
-
 	merchantId, _ := strconv.Atoi(form.Value["merchant_id"][0])
-	db.CON.Where("merchant_id = ? and id IN ?", merchantId, val).Find(&merchantImage)
-	//remove selected old image
-	for _, image := range merchantImage {
-		if image.Url != "" {
-			RemoveFile(image.Url)
-			db.CON.Delete(&image)
+	removeId := form.Value["remove_id"]
+	if removeId != nil {
+		val := strToArray(removeId[0])
+		if len(val) > 0 {
+			var merchantImage []models.MerchantLandingImage
+			db.CON.Where("merchant_id = ? and id IN ?", merchantId, val).Find(&merchantImage)
+			//remove selected old image
+			for _, image := range merchantImage {
+				if image.Url != "" {
+					RemoveFile(image.Url)
+					db.CON.Delete(&image)
+				}
+			}
 		}
 	}
 	//upload new image
@@ -115,7 +131,7 @@ func MerchantUploadLandingImage(c *gin.Context) {
 		file.Filename = fmt.Sprint(time.Now().UnixNano()) + "-" + file.Filename
 		log.Println(file.Filename)
 		path := "merchantlanding"
-		url := path + "/" + file.Filename
+		url := fileUrl(file, path)
 		c.SaveUploadedFile(file, "public/"+url)
 		images = append(images, models.MerchantLandingImage{
 			MerchantId: uint(merchantId),
@@ -123,8 +139,8 @@ func MerchantUploadLandingImage(c *gin.Context) {
 		})
 	}
 	db.CON.CreateInBatches(&images, len(images))
-
-	c.JSON(http.StatusCreated, gin.H{"message": "multiple file uploaded", "data": images})
+	broadCastMerchant(userId)
+	c.JSON(http.StatusCreated, gin.H{"message": "multiple file uploaded", "data": images, "remove_id": removeId})
 }
 
 func MerchantUpdate(c *gin.Context) {

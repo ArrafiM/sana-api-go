@@ -11,7 +11,7 @@ import (
 
 	"time"
 
-	"gorm.io/gorm"
+	// "gorm.io/gorm"
 
 	"github.com/gin-gonic/gin"
 	// "gorm.io/gorm/clause"
@@ -71,18 +71,19 @@ func GetUserLocations(c *gin.Context) {
 }
 
 func GetNearestPoint(c *gin.Context) {
-	// userId, err := token.ExtractTokenID(c)
+	userId, _ := token.ExtractTokenID(c)
 	latitude := c.Query("latitude")
 	longitude := c.Query("longitude")
 	radius := c.Query("radius")
 	page := c.Query("page")
 	pageSize := c.Query("page_size")
-	merchandise := c.Query("merchandise")
+	merchandise := c.DefaultQuery("merchandise", "false") == "true"
 	itemName := c.Query("itemname")
+	excludeMy := c.DefaultQuery("excludemy", "false") == "true"
 	var location []models.CustomLocation
 	distance := fmt.Sprintf("ST_Distance(location, ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography)/1000 AS distance",
 		longitude, latitude)
-	db.CON.
+	query := db.CON.
 		Scopes(db.Paginate(page, pageSize)).
 		Select("id", "user_id",
 			"ST_X(location::geography::geometry) AS longitude",
@@ -94,25 +95,29 @@ func GetNearestPoint(c *gin.Context) {
 			)`, longitude, latitude, radius).
 		Order("distance ASC").
 		Preload("User").
-		Preload("Merchant", func(db *gorm.DB) *gorm.DB {
-			if merchandise == "true" {
-				return db.Preload("Merchandise", func(mc *gorm.DB) *gorm.DB {
-					if itemName != "" {
-						return mc.Where("name ilike ?", "%"+itemName+"%").
-							Select("id", "name", "picture", "price", "merchant_id").
-							Limit(3)
-					}
-					return mc.Select("id", "name", "picture", "price", "merchant_id").
-						Limit(3)
-				},
-				)
+		Preload("Merchant")
+	if excludeMy {
+		query.Where("user_id != ?", userId)
+	}
+	// query.Joins("merchants ON merchants.user_id = user_locations.user_id")
+	// if itemName != ""{
+	// }
+	query.Find(&location)
+	if merchandise {
+		//merchandise data
+		for i, val := range location {
+			merchant := val.Merchant
+			merchId := merchant.ID
+			var itemData []models.Merchandise
+			query := db.CON.Where("merchant_id = ?", merchId)
+			if itemName != "" {
+				query.Where("name ilike ?", "%"+itemName+"%")
 			}
-			return db
-		}).
-		Find(&location)
-
-	// db.CON.Where("user_id = ?", userId).First(&location)
-
+			query.Order("id DESC").
+				Limit(3).Find(&itemData)
+			location[i].Merchant.Merchandise = &itemData
+		}
+	}
 	c.JSON(http.StatusOK, gin.H{"message": "your location", "data": location})
 }
 

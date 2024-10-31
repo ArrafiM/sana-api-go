@@ -7,6 +7,7 @@ import (
 	"sana-api/models"
 	"sana-api/utils/token"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -159,4 +160,27 @@ func StoreChat(c *gin.Context) {
 	msg.SenderID = fmt.Sprintf("user%s", strconv.Itoa(int(chat.ReceiverId)))
 	BroadcastMessage(msg)
 	c.JSON(http.StatusOK, gin.H{"message": "chat message stored", "data": newChat})
+}
+
+func StringToArrayOfInt(member string) []int {
+	memberStr := strings.Split(member, ",")
+	var members []int
+	for _, s := range memberStr {
+		num, _ := strconv.Atoi(s)
+		members = append(members, num)
+	}
+	return members
+}
+
+func GetRoom(c *gin.Context) {
+	var room models.ChatRoom
+	sender := c.Query("sender")
+	receiver := c.Query("receiver")
+	if sender == "" || receiver == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "please add query: sender & receiver"})
+		return
+	}
+	fmt.Printf("%s, %s", sender,receiver)
+	db.CON.Where("member @> ARRAY[?,?]::integer[]", sender, receiver ).First(&room)
+	c.JSON(http.StatusOK, gin.H{"message": "chat room data", "data": room})
 }

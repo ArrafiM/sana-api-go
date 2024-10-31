@@ -10,7 +10,7 @@ import (
 	"sana-api/models"
 	"sana-api/utils/token"
 	"time"
-
+	"strings"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
@@ -56,7 +56,7 @@ func UploadFile(c *gin.Context) {
 func fileUrl(file *multipart.FileHeader, path string) string {
 	file.Filename = fmt.Sprint(time.Now().UnixNano()) + "-" + file.Filename
 	log.Println(file.Filename)
-	url := path + "/" + file.Filename
+	url := strings.ReplaceAll(path + "/" + file.Filename, " ", "")
 
 	return url
 }
