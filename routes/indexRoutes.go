@@ -16,5 +16,6 @@ func IndexRoutes(r *gin.Engine) {
 	WebscoketRoute(r)
 	//--
 	ChatRoutes(r)
+	DeviceTokenRoutes(r)
 
 }
