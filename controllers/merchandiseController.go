@@ -1,7 +1,9 @@
 package controllers
 
 import (
+	"encoding/json"
 	"fmt"
+
 	"log"
 	"net/http"
 	"sana-api/models"
@@ -60,6 +62,19 @@ func CreateMerchandise(c *gin.Context) {
 		Name:        payload.Name,
 		Description: payload.Description,
 		Picture:     url,
+		Tag:         nil,
+	}
+	if payload.Active != nil {
+		merchandise.Active = *payload.Active
+	}
+
+	if payload.Tag != nil {
+		// Parsing JSON string ke array of string
+		err := json.Unmarshal([]byte(*payload.Tag), &merchandise.Tag)
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
 	}
 
 	db.CON.Create(&merchandise)
@@ -155,11 +170,24 @@ func MerchandiseUpdate(c *gin.Context) {
 				} else if merchandiseType.Field(i).Name == "MerchantID" {
 					mId, _ := strconv.Atoi(field.Elem().String())
 					existingField.SetInt(int64(mId))
+				} else if merchandiseType.Field(i).Name == "Tag" {
+					continue
 				} else {
 					existingField.Set(reflect.Indirect(field))
 				}
 			}
 		}
+	}
+
+	if merchandise.Tag != nil {
+		var tag []string
+		// Parsing JSON string ke array of string
+		err := json.Unmarshal([]byte(*merchandise.Tag), &tag)
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
+		existingMerchandise.Tag = tag
 	}
 
 	// Save updated merchandise
@@ -190,10 +218,10 @@ func MerchandiseDelete(c *gin.Context) {
 	c.JSON(http.StatusNotFound, gin.H{"error": "Merchandise deleted", "data": true})
 }
 
-func MerchandiseExplore(c * gin.Context){
+func MerchandiseExplore(c *gin.Context) {
 	var merchant []models.Merchant
 
 	db.CON.Preload("Merchandise").Find(&merchant)
 
-	c.JSON(http.StatusOK, gin.H{"message":"explore data", "data":merchant})
+	c.JSON(http.StatusOK, gin.H{"message": "explore data", "data": merchant})
 }

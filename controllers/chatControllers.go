@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 
+	"log"
+
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
@@ -159,7 +161,19 @@ func StoreChat(c *gin.Context) {
 	msg.ReceiverID = fmt.Sprintf("user%s", strconv.Itoa(int(userId)))
 	msg.SenderID = fmt.Sprintf("user%s", strconv.Itoa(int(chat.ReceiverId)))
 	BroadcastMessage(msg)
+	PushNotif(chat.ReceiverId, chat.Message)//fcm push notif
 	c.JSON(http.StatusOK, gin.H{"message": "chat message stored", "data": newChat})
+}
+
+func PushNotif(userId int, message string) {
+	var deviceToken models.DeviceToken
+	if err := db.CON.Where("user_id = ?", userId).
+		First(&deviceToken).Error; err != nil {
+		log.Printf("Failed sent message: %s\n", err)
+		return
+	}
+	token := deviceToken.Token
+	SendNotification(token, "SANA", message)
 }
 
 func StringToArrayOfInt(member string) []int {
@@ -180,7 +194,7 @@ func GetRoom(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "please add query: sender & receiver"})
 		return
 	}
-	fmt.Printf("%s, %s", sender,receiver)
-	db.CON.Where("member @> ARRAY[?,?]::integer[]", sender, receiver ).First(&room)
+	fmt.Printf("%s, %s", sender, receiver)
+	db.CON.Where("member @> ARRAY[?,?]::integer[]", sender, receiver).First(&room)
 	c.JSON(http.StatusOK, gin.H{"message": "chat room data", "data": room})
 }

@@ -4,19 +4,21 @@ import (
 	"mime/multipart"
 	"time"
 
+	"github.com/lib/pq"
 	"gorm.io/gorm"
 )
 
 type Merchandise struct {
 	gorm.Model
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	Price       int       `json:"price"`
-	Active      bool      `json:"active" gorm:"default:TRUE"`
-	Picture     string    `json:"picture"`
-	MerchantID  int       `json:"merchant_id"`
-	CreatedAt   time.Time `json:"-"`
-	UpdatedAt   time.Time `json:"-" gorm:"autoUpdateTime"`
+	Name        string         `json:"name"`
+	Description string         `json:"description"`
+	Price       int            `json:"price"`
+	Active      bool           `json:"active" gorm:"default:false"`
+	Picture     string         `json:"picture"`
+	MerchantID  int            `json:"merchant_id"`
+	Tag         pq.StringArray `json:"tag" gorm:"type:string[]"`
+	CreatedAt   time.Time      `json:"-"`
+	UpdatedAt   time.Time      `json:"-" gorm:"autoUpdateTime"`
 }
 
 type GetMerchandiseImage struct {
@@ -34,6 +36,8 @@ type MerchandiseCreate struct {
 	Price       string                `form:"price" binding:"required"`
 	MerchantID  string                `form:"merchant_id" binding:"required"`
 	Picture     *multipart.FileHeader `form:"picture" binding:"required"`
+	Tag         *string               `form:"tag"`
+	Active      *bool                 `form:"active"`
 }
 
 type MerchandiseImages struct {
@@ -54,4 +58,6 @@ type MerchandiseUpdate struct {
 	Price       *string               `form:"price"`
 	MerchantID  *string               `form:"merchant_id"`
 	Picture     *multipart.FileHeader `form:"picture"`
+	Tag         *string               `form:"tag"`
+	Active      *bool                 `form:"active"`
 }
