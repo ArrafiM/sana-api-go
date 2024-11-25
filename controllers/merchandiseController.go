@@ -1,12 +1,11 @@
 package controllers
 
 import (
-	"encoding/json"
 	"fmt"
-
 	"log"
 	"net/http"
 	"sana-api/models"
+	"strings"
 	"time"
 
 	"reflect"
@@ -70,11 +69,19 @@ func CreateMerchandise(c *gin.Context) {
 
 	if payload.Tag != nil {
 		// Parsing JSON string ke array of string
-		err := json.Unmarshal([]byte(*payload.Tag), &merchandise.Tag)
-		if err != nil {
-			fmt.Println("Error:", err)
-			return
-		}
+		// fmt.Println(*payload.Tag)
+		// err := json.Unmarshal([]byte(*payload.Tag), &merchandise.Tag)
+		// if err != nil {
+		// 	fmt.Println("Error:", err)
+		// 	return
+		datatag := *payload.Tag
+
+		// Menghapus karakter pembuka dan penutup []
+		datatag = strings.Trim(datatag, "[]")
+
+		// Memisahkan elemen berdasarkan koma dan spasi
+		arrayTag := strings.Split(datatag, ", ")
+		merchandise.Tag = arrayTag
 	}
 
 	db.CON.Create(&merchandise)
@@ -180,14 +187,14 @@ func MerchandiseUpdate(c *gin.Context) {
 	}
 
 	if merchandise.Tag != nil {
-		var tag []string
-		// Parsing JSON string ke array of string
-		err := json.Unmarshal([]byte(*merchandise.Tag), &tag)
-		if err != nil {
-			fmt.Println("Error:", err)
-			return
-		}
-		existingMerchandise.Tag = tag
+		datatag := *merchandise.Tag
+
+		// Menghapus karakter pembuka dan penutup []
+		datatag = strings.Trim(datatag, "[]")
+
+		// Memisahkan elemen berdasarkan koma dan spasi
+		arrayTag := strings.Split(datatag, ", ")
+		existingMerchandise.Tag = arrayTag
 	}
 
 	// Save updated merchandise
@@ -213,9 +220,15 @@ func MerchandiseDelete(c *gin.Context) {
 	if merchandise.Picture != "" {
 		RemoveFile(merchandise.Picture)
 	}
+
 	//delete permanently
 	db.CON.Unscoped().Delete(&merchandise)
+
+	userId, _ := token.ExtractTokenID(c)
+	broadCastMerchant(userId)
+
 	c.JSON(http.StatusNotFound, gin.H{"error": "Merchandise deleted", "data": true})
+
 }
 
 func MerchandiseExplore(c *gin.Context) {
