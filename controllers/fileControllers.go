@@ -9,8 +9,9 @@ import (
 	"sana-api/db"
 	"sana-api/models"
 	"sana-api/utils/token"
-	"time"
 	"strings"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
@@ -34,29 +35,37 @@ func UploadFile(c *gin.Context) {
 			return
 		}
 	}
+	file, _ := c.FormFile("picture")
+
 	if user.Picture != "" {
 		RemoveFile(user.Picture)
 	}
 
-	file, _ := c.FormFile("picture")
+	if file != nil {
+		path := "pictureuser"
 
-	path := "pictureuser"
+		url := fileUrl(file, path)
+		c.SaveUploadedFile(file, "public/"+url)
 
-	url := fileUrl(file, path)
-	c.SaveUploadedFile(file, "public/"+url)
-
-	if db.CON.Model(&user).Where("id = ?", user_id).Update("picture", url).RowsAffected == 0 {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "user not updated"})
-		return
+		if db.CON.Model(&user).Where("id = ?", user_id).Update("picture", url).RowsAffected == 0 {
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "user not updated"})
+			return
+		}
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "success", "data": url})
+	name := c.PostForm("name")
+	if name != "" {
+		user.Name = name
+		db.CON.Save(&user)
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "success", "data": user})
 }
 
 func fileUrl(file *multipart.FileHeader, path string) string {
 	file.Filename = fmt.Sprint(time.Now().UnixNano()) + "-" + file.Filename
 	log.Println(file.Filename)
-	url := strings.ReplaceAll(path + "/" + file.Filename, " ", "")
+	url := strings.ReplaceAll(path+"/"+file.Filename, " ", "")
 
 	return url
 }

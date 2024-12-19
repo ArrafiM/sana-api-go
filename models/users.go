@@ -50,8 +50,8 @@ func VerifyPassword(password, hashedPassword string) error {
 }
 
 type LoginResponse struct {
-	Token string `json:"token"`
-	UserId uint `json:"user_id"`
+	Token  string `json:"token"`
+	UserId uint   `json:"user_id"`
 }
 
 func LoginCheck(email string, password string) (LoginResponse, error) {
@@ -79,9 +79,15 @@ func LoginCheck(email string, password string) (LoginResponse, error) {
 	}
 
 	res := LoginResponse{
-		Token: token,
+		Token:  token,
 		UserId: u.ID,
 	}
 	return res, nil
 
+}
+
+type ChangePass struct {
+	Oldpass        string `json:"oldpass" binding:"required"`
+	Newpass        string `json:"newpass" binding:"required"`
+	ComfirmNewpass string `json:"confirm_newpass" binding:"required"`
 }

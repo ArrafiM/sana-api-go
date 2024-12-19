@@ -7,6 +7,7 @@ import (
 	"sana-api/utils/token"
 
 	"github.com/gin-gonic/gin"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
@@ -53,4 +54,42 @@ func DeleteUser(c *gin.Context) {
 	//soft delete user
 	db.CON.Delete(&u)
 	c.JSON(http.StatusOK, gin.H{"message": "user soft deleted", "id": userId})
+}
+
+func ChangePass(c *gin.Context) {
+	var payload models.ChangePass
+
+	user_id, _ := token.ExtractTokenID(c)
+
+	// Bind multipart/form-data to struct
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Fetch existing merchant
+	var user models.User
+	if err := db.CON.First(&user, user_id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+		return
+	}
+
+	var errCek = models.VerifyPassword(payload.Oldpass, user.Password)
+
+	if errCek != nil && errCek == bcrypt.ErrMismatchedHashAndPassword {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "old pass mismatch"})
+		return
+	}
+
+	if payload.Newpass != payload.ComfirmNewpass {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Confirm password mismatch"})
+		return
+	}
+
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(payload.Newpass), bcrypt.DefaultCost)
+	user.Password = string(hashedPassword)
+
+	db.CON.Save(&user)
+
+	c.JSON(http.StatusOK, gin.H{"data": user})
 }
