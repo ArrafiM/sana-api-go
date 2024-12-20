@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"sana-api/models"
-
+	"sana-api/config"
 	"sana-api/db"
+	"sana-api/models"
 	"sana-api/utils/token"
 
 	"time"
@@ -134,14 +134,17 @@ func NewLocation(c *gin.Context) {
 	long := c.Query("long")
 	user_id, _ := token.ExtractTokenID(c)
 	location := fmt.Sprintf("POINT(%s %s)", long, lat)
-	var UserLocation models.UserLocation
-
-	db.CON.Where("user_id = ?", user_id).Delete(&UserLocation)
 	createLocation := models.UserLocation{
 		UserID:   user_id,
 		Location: location,
 	}
-	db.CON.Create(&createLocation)
+	postLocation := config.GetEnv("POST_LOCATION")
+	if postLocation == "true" {
+		var UserLocation models.UserLocation
+
+		db.CON.Where("user_id = ?", user_id).Delete(&UserLocation)
+		db.CON.Create(&createLocation)
+	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "user location added", "data": createLocation})
 }
