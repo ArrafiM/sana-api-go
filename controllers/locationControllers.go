@@ -161,7 +161,7 @@ func postLocation(msg Message) {
 		log.Printf("location msg socket: %s", *msg.Location)
 	}
 	log.Printf("job started delay 1 menit userId: %s", senderId)
-	time.Sleep(1 * time.Minute)
+	time.Sleep(2 * time.Minute)
 	log.Printf("bakcground job id: %s, finish", senderId)
 	broadCastLocation(senderId)
 }
