@@ -18,14 +18,14 @@ import (
 
 func UploadFile(c *gin.Context) {
 	// single file
-	user_id, err := token.ExtractTokenID(c)
+	userId, err := token.ExtractTokenID(c)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	var user models.User
-	if err := db.CON.First(&user, user_id).Error; err != nil {
+	if err := db.CON.First(&user, userId).Error; err != nil {
 		switch err {
 		case gorm.ErrRecordNotFound:
 			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": "user notfound"})
@@ -37,7 +37,7 @@ func UploadFile(c *gin.Context) {
 	}
 	file, _ := c.FormFile("picture")
 
-	if user.Picture != "" {
+	if user.Picture != "" && file != nil {
 		RemoveFile(user.Picture)
 	}
 
@@ -47,7 +47,7 @@ func UploadFile(c *gin.Context) {
 		url := fileUrl(file, path)
 		c.SaveUploadedFile(file, "public/"+url)
 
-		if db.CON.Model(&user).Where("id = ?", user_id).Update("picture", url).RowsAffected == 0 {
+		if db.CON.Model(&user).Where("id = ?", userId).Update("picture", url).RowsAffected == 0 {
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "user not updated"})
 			return
 		}
@@ -58,7 +58,7 @@ func UploadFile(c *gin.Context) {
 		user.Name = name
 		db.CON.Save(&user)
 	}
-
+	broadCastMerchant(userId)
 	c.JSON(http.StatusOK, gin.H{"message": "success", "data": user})
 }
 
