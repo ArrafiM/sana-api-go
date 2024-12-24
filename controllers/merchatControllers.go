@@ -40,17 +40,21 @@ func GetMerchantId(c *gin.Context) {
 
 func GetMyMerchant(c *gin.Context) {
 	user_id, err := token.ExtractTokenID(c)
-
+	cek := c.Query("cek")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	println("user_id", user_id)
 	var merchant models.MerchantDtl
-	if err := db.CON.Where("user_id = ?", user_id).
-		Preload("User").
-		Preload("LandingImages").
-		Preload("Merchandise").
+	getMerchant := db.CON.Where("user_id = ?", user_id)
+	if cek != "true" {
+		getMerchant.
+			Preload("User").
+			Preload("LandingImages").
+			Preload("Merchandise")
+	}
+	if err := getMerchant.
 		First(&merchant).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Merchant not found", "data": nil})
 		return

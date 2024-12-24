@@ -28,7 +28,7 @@ type MerchantCreate struct {
 
 type MerchantUser struct {
 	Merchant
-	User          User                    `json:"user"`
+	User          *User                   `json:"user"`
 	LandingImages *[]MerchantLandingImage `json:"landing_images" gorm:"foreignKey:merchant_id"`
 }
 
