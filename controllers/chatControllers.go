@@ -158,10 +158,10 @@ func StoreChat(c *gin.Context) {
 	}
 	BroadcastMessage(msg)
 	//send back to sender
-	msg.ReceiverID = fmt.Sprintf("user%s", strconv.Itoa(int(userId)))
-	msg.SenderID = fmt.Sprintf("user%s", strconv.Itoa(int(chat.ReceiverId)))
-	BroadcastMessage(msg)
-	PushNotif(chat.ReceiverId, chat.Message)//fcm push notif
+	// msg.ReceiverID = fmt.Sprintf("user%s", strconv.Itoa(int(userId)))
+	// msg.SenderID = fmt.Sprintf("user%s", strconv.Itoa(int(chat.ReceiverId)))
+	// BroadcastMessage(msg)
+	PushNotif(chat.ReceiverId, chat.Message) //fcm push notif
 	c.JSON(http.StatusOK, gin.H{"message": "chat message stored", "data": newChat})
 }
 
