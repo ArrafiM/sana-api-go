@@ -85,7 +85,7 @@ func CreateMerchant(c *gin.Context) {
 	}
 
 	db.CON.Create(&merchant)
-	broadCastMerchant(userId)
+	// broadCastMerchant(userId)
 	c.JSON(http.StatusCreated, gin.H{"message": "Merchant created", "data": merchant})
 }
 
@@ -105,7 +105,7 @@ func strToArray(str string) []int {
 }
 
 func MerchantUploadLandingImage(c *gin.Context) {
-	userId, _ := token.ExtractTokenID(c)
+	// userId, _ := token.ExtractTokenID(c)
 	// Multipart form
 	form, _ := c.MultipartForm()
 	merchantId, _ := strconv.Atoi(form.Value["merchant_id"][0])
@@ -139,7 +139,7 @@ func MerchantUploadLandingImage(c *gin.Context) {
 		})
 	}
 	db.CON.CreateInBatches(&images, len(images))
-	broadCastMerchant(userId)
+	// broadCastMerchant(userId)
 	c.JSON(http.StatusCreated, gin.H{"message": "multiple file uploaded", "data": images, "remove_id": removeId})
 }
 
@@ -197,16 +197,16 @@ func MerchantUpdate(c *gin.Context) {
 		return
 	}
 
-	broadCastMerchant(existingMerchant.UserID)
+	// broadCastMerchant(existingMerchant.UserID)
 
 	c.JSON(http.StatusOK, gin.H{"message": "merchant updated", "data": existingMerchant})
 }
 
-func broadCastMerchant(userId uint) {
-	msg := Message{
-		SenderID:   fmt.Sprintf("user%s", strconv.Itoa(int(userId))),
-		ReceiverID: fmt.Sprintf("user%s", strconv.Itoa(int(userId))),
-		Content:    fmt.Sprintf("myMerchant%s", strconv.Itoa(int(userId))),
-	}
-	BroadcastMessage(msg)
-}
+// func broadCastMerchant(userId uint) {
+// 	msg := Message{
+// 		SenderID:   fmt.Sprintf("user%s", strconv.Itoa(int(userId))),
+// 		ReceiverID: fmt.Sprintf("user%s", strconv.Itoa(int(userId))),
+// 		Content:    fmt.Sprintf("myMerchant%s", strconv.Itoa(int(userId))),
+// 	}
+// 	BroadcastMessage(msg)
+// }

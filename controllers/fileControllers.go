@@ -58,7 +58,7 @@ func UploadFile(c *gin.Context) {
 		user.Name = name
 		db.CON.Save(&user)
 	}
-	broadCastMerchant(userId)
+	// broadCastMerchant(userId)
 	c.JSON(http.StatusOK, gin.H{"message": "success", "data": user})
 }
 

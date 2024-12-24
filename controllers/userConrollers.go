@@ -59,7 +59,7 @@ func DeleteUser(c *gin.Context) {
 func ChangePass(c *gin.Context) {
 	var payload models.ChangePass
 
-	user_id, _ := token.ExtractTokenID(c)
+	userId, _ := token.ExtractTokenID(c)
 
 	// Bind multipart/form-data to struct
 	if err := c.ShouldBindJSON(&payload); err != nil {
@@ -69,7 +69,7 @@ func ChangePass(c *gin.Context) {
 
 	// Fetch existing merchant
 	var user models.User
-	if err := db.CON.First(&user, user_id).Error; err != nil {
+	if err := db.CON.First(&user, userId).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
 		return
 	}
@@ -90,6 +90,6 @@ func ChangePass(c *gin.Context) {
 	user.Password = string(hashedPassword)
 
 	db.CON.Save(&user)
-
+	// broadCastMerchant(userId)
 	c.JSON(http.StatusOK, gin.H{"data": user})
 }

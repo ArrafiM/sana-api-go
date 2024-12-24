@@ -12,7 +12,6 @@ import (
 	"strconv"
 
 	"sana-api/db"
-	"sana-api/utils/token"
 
 	"github.com/gin-gonic/gin"
 )
@@ -39,7 +38,7 @@ func GetMerchandiseId(c *gin.Context) {
 }
 
 func CreateMerchandise(c *gin.Context) {
-	userId, _ := token.ExtractTokenID(c)
+	// userId, _ := token.ExtractTokenID(c)
 	var payload models.MerchandiseCreate
 	if err := c.ShouldBind(&payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -85,7 +84,7 @@ func CreateMerchandise(c *gin.Context) {
 	}
 
 	db.CON.Create(&merchandise)
-	broadCastMerchant(userId)
+	// broadCastMerchant(userId)
 	c.JSON(http.StatusCreated, gin.H{"message": "Merchandise created", "data": merchandise})
 }
 
@@ -128,7 +127,7 @@ func MerchandiseUploadImages(c *gin.Context) {
 }
 
 func MerchandiseUpdate(c *gin.Context) {
-	userId, _ := token.ExtractTokenID(c)
+	// userId, _ := token.ExtractTokenID(c)
 	var merchandise models.MerchandiseUpdate
 
 	id := c.Param("id")
@@ -203,7 +202,7 @@ func MerchandiseUpdate(c *gin.Context) {
 		return
 	}
 
-	broadCastMerchant(userId)
+	// broadCastMerchant(userId)
 
 	c.JSON(http.StatusOK, gin.H{"message": "merchandise updated", "data": existingMerchandise})
 }
@@ -224,8 +223,8 @@ func MerchandiseDelete(c *gin.Context) {
 	//delete permanently
 	db.CON.Unscoped().Delete(&merchandise)
 
-	userId, _ := token.ExtractTokenID(c)
-	broadCastMerchant(userId)
+	// userId, _ := token.ExtractTokenID(c)
+	// broadCastMerchant(userId)
 
 	c.JSON(http.StatusNotFound, gin.H{"error": "Merchandise deleted", "data": true})
 
