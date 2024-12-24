@@ -14,7 +14,5 @@ func UserRoute(r *gin.Engine) {
 	routeGroup.PUT("/update", controllers.UploadFile)
 	routeGroup.GET("/me", controllers.CurrentUser)
 	routeGroup.DELETE("/:id", controllers.DeleteUser)
-	changepass := r.Group("/api/users-changepass")
-	changepass.Use(middlewares.JwtAuthMiddleware())
-	changepass.PUT("/", controllers.ChangePass)
+	routeGroup.PUT("/changepass", controllers.ChangePass)
 }
