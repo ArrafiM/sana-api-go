@@ -41,6 +41,7 @@ func GetMerchantId(c *gin.Context) {
 func GetMyMerchant(c *gin.Context) {
 	user_id, err := token.ExtractTokenID(c)
 	cek := c.Query("cek")
+	image := c.Query("image")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -51,8 +52,10 @@ func GetMyMerchant(c *gin.Context) {
 	if cek != "true" {
 		getMerchant.
 			Preload("User").
-			Preload("LandingImages").
 			Preload("Merchandise")
+	}
+	if image == "true" {
+		getMerchant.Preload("LandingImages")
 	}
 	if err := getMerchant.
 		First(&merchant).Error; err != nil {
