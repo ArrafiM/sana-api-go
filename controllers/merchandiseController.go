@@ -17,10 +17,29 @@ import (
 )
 
 func GetMerchandises(c *gin.Context) {
+	merchantId := c.Query("merchant_id")
+	isActive := c.Query("isactive")
+	page := c.Query("page")
+	pageSize := c.Query("page_size")
+	if page == "" || pageSize == "" {
+		page = "1"
+		pageSize = "10"
+	}
 	var merchandise []models.GetMerchandiseImage
-	db.CON.
-		Preload("Images").
-		Find(&merchandise)
+	item := db.CON.
+		Preload("Images")
+	if isActive == "true" {
+		item.Where("active = ?", "true")
+	}
+	if isActive == "false" {
+		item.Where("active = ?", "false")
+	}
+	if merchantId != "" {
+		item.Where("merchant_id = ?", merchantId).
+			Scopes(db.Paginate(page, pageSize)).
+			Order("id desc")
+	}
+	item.Find(&merchandise)
 	c.JSON(http.StatusOK, gin.H{"message": "All merchandise data", "data": merchandise})
 }
 
