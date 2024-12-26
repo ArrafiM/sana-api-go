@@ -21,6 +21,8 @@ func GetMerchandises(c *gin.Context) {
 	isActive := c.Query("isactive")
 	page := c.Query("page")
 	pageSize := c.Query("page_size")
+	last := c.Query("last")
+	update := c.Query("update")
 	if page == "" || pageSize == "" {
 		page = "1"
 		pageSize = "10"
@@ -35,9 +37,18 @@ func GetMerchandises(c *gin.Context) {
 		item.Where("active = ?", "false")
 	}
 	if merchantId != "" {
-		item.Where("merchant_id = ?", merchantId).
-			Scopes(db.Paginate(page, pageSize)).
-			Order("id desc")
+		item.Where("merchant_id = ?", merchantId)
+		if last == "true" {
+			item.Scopes(db.Paginate("1", "1"))
+			if update == "true" {
+				item.Order("updated_at desc")
+			} else {
+				item.Order("created_at desc")
+			}
+		} else {
+			item.Scopes(db.Paginate(page, pageSize)).
+				Order("id desc")
+		}
 	}
 	item.Find(&merchandise)
 	c.JSON(http.StatusOK, gin.H{"message": "All merchandise data", "data": merchandise})
