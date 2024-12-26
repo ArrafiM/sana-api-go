@@ -109,7 +109,7 @@ func GetNearestPoint(c *gin.Context) {
 			merchant := val.Merchant
 			merchId := merchant.ID
 			var itemData []models.Merchandise
-			query := db.CON.Where("merchant_id = ?", merchId)
+			query := db.CON.Where("merchant_id = ? and active = ?", merchId, true)
 			if itemName != "" {
 				query.Where("name ilike ?", "%"+itemName+"%")
 			}
