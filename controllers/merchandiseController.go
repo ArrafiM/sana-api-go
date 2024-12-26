@@ -245,7 +245,7 @@ func MerchandiseDelete(c *gin.Context) {
 	// userId, _ := token.ExtractTokenID(c)
 	// broadCastMerchant(userId)
 
-	c.JSON(http.StatusNotFound, gin.H{"error": "Merchandise deleted", "data": true})
+	c.JSON(http.StatusOK, gin.H{"error": "Merchandise deleted", "data": true})
 
 }
 
