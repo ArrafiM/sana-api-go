@@ -25,15 +25,17 @@ func GetMerchants(c *gin.Context) {
 
 func GetMerchantId(c *gin.Context) {
 	id := c.Param("id")
-	cek := c.Query("cek")
+	user := c.Query("user")
 	image := c.Query("image")
+	item := c.Query("item")
 	// Fetch existing merchant
 	var existingMerchant models.MerchantDtl
 	getMerchant := db.CON.Where("id = ?", id)
-	if cek != "true" {
-		getMerchant.
-			Preload("User").
-			Preload("Merchandise")
+	if user == "true" {
+		getMerchant.Preload("User")
+	}
+	if item == "true" {
+		getMerchant.Preload("Merchandise")
 	}
 	if image == "true" {
 		getMerchant.Preload("LandingImages")
