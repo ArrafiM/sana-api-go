@@ -25,12 +25,20 @@ func GetMerchants(c *gin.Context) {
 
 func GetMerchantId(c *gin.Context) {
 	id := c.Param("id")
+	cek := c.Query("cek")
+	image := c.Query("image")
 	// Fetch existing merchant
 	var existingMerchant models.MerchantDtl
-	if err := db.CON.
-		Preload("User").
-		Preload("LandingImages").
-		Preload("Merchandise").
+	getMerchant := db.CON.Where("id = ?", id)
+	if cek != "true" {
+		getMerchant.
+			Preload("User").
+			Preload("Merchandise")
+	}
+	if image == "true" {
+		getMerchant.Preload("LandingImages")
+	}
+	if err := getMerchant.
 		First(&existingMerchant, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Merchant not found"})
 		return
