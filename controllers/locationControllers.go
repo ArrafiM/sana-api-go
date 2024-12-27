@@ -77,7 +77,7 @@ func GetNearestPoint(c *gin.Context) {
 	radius := c.Query("radius")
 	page := c.Query("page")
 	pageSize := c.Query("page_size")
-	merchandise := c.DefaultQuery("merchandise", "false") == "true"
+	merchandise := c.Query("merchandise")
 	itemName := c.Query("itemname")
 	excludeMy := c.DefaultQuery("excludemy", "false") == "true"
 	isopen := c.Query("isopen")
@@ -108,7 +108,7 @@ func GetNearestPoint(c *gin.Context) {
 	// if itemName != ""{
 	// }
 	query.Find(&location)
-	if merchandise {
+	if merchandise == "true" {
 		//merchandise data
 		for i, val := range location {
 			merchant := val.Merchant
