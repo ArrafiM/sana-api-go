@@ -80,6 +80,7 @@ func GetNearestPoint(c *gin.Context) {
 	merchandise := c.DefaultQuery("merchandise", "false") == "true"
 	itemName := c.Query("itemname")
 	excludeMy := c.DefaultQuery("excludemy", "false") == "true"
+	isopen := c.Query("isopen")
 	var location []models.CustomLocation
 	distance := fmt.Sprintf("ST_Distance(location, ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography)/1000 AS distance",
 		longitude, latitude)
@@ -98,6 +99,9 @@ func GetNearestPoint(c *gin.Context) {
 		Preload("Merchant")
 	if excludeMy {
 		query.Where("user_id != ?", userId)
+	}
+	if isopen != "true" {
+		query.Where("status = ?", "active")
 	}
 	// query.Joins("merchants ON merchants.user_id = user_locations.user_id")
 	// if itemName != ""{
