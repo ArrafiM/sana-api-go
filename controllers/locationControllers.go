@@ -95,13 +95,16 @@ func GetNearestPoint(c *gin.Context) {
 				?
 			)`, longitude, latitude, radius).
 		Order("distance ASC").
-		Preload("User").
-		Preload("Merchant")
+		Preload("User")
+		
 	if excludeMy {
 		query.Where("user_id != ?", userId)
 	}
+	
 	if isopen != "true" {
-		query.Where("status = ?", "active")
+		query.Preload("Merchant", "status = ?", "active")
+	}else{
+		query.Preload("Merchant")
 	}
 	// query.Joins("merchants ON merchants.user_id = user_locations.user_id")
 	// if itemName != ""{
