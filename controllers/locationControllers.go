@@ -112,6 +112,9 @@ func GetNearestPoint(c *gin.Context) {
 		//merchandise data
 		for i, val := range location {
 			merchant := val.Merchant
+			if merchant == nil {
+				continue;
+			}
 			merchId := merchant.ID
 			var itemData []models.Merchandise
 			query := db.CON.Where("merchant_id = ? and active = ?", merchId, true)
