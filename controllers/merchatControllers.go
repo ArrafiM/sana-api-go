@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"reflect"
 	"sana-api/db"
+	"sana-api/helpers"
 	"sana-api/models"
 	"sana-api/utils/token"
 	"strconv"
@@ -94,11 +95,19 @@ func CreateMerchant(c *gin.Context) {
 
 	c.SaveUploadedFile(file, "public/"+url)
 
+	Color := ""
+	if payload.Color != nil {
+		Color = *payload.Color
+	} else {
+		Color = helpers.GenerateHexColor()
+	}
+
 	merchant := models.Merchant{
 		UserID:      userId,
 		Name:        payload.Name,
 		Description: payload.Description,
 		Picture:     url,
+		Color:       Color,
 	}
 
 	db.CON.Create(&merchant)

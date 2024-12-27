@@ -24,6 +24,7 @@ type MerchantCreate struct {
 	Name        string                `form:"name" binding:"required"`
 	Description string                `form:"description" binding:"required"`
 	Picture     *multipart.FileHeader `form:"picture" binding:"required"`
+	Color       *string               `form:"color"`
 }
 
 type MerchantUser struct {

@@ -17,5 +17,6 @@ func IndexRoutes(r *gin.Engine) {
 	//--
 	ChatRoutes(r)
 	DeviceTokenRoutes(r)
+	FeedbackRoutes(r)
 
 }
