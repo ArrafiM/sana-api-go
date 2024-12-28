@@ -107,14 +107,16 @@ func GetNearestPoint(c *gin.Context) {
 	// query.Joins("merchants ON merchants.user_id = user_locations.user_id")
 	// if itemName != ""{
 	// }
+	var filteredLocation []models.CustomLocation
 	query.Find(&location)
-	if merchandise == "true" {
-		//merchandise data
-		for i, val := range location {
-			merchant := val.Merchant
-			if merchant == nil {
-				continue;
-			}
+
+	//merchandise data
+	for i, val := range location {
+		merchant := val.Merchant
+		if merchant == nil {
+			continue
+		}
+		if merchandise == "true" {
 			merchId := merchant.ID
 			var itemData []models.Merchandise
 			query := db.CON.Where("merchant_id = ? and active = ?", merchId, true)
@@ -125,6 +127,12 @@ func GetNearestPoint(c *gin.Context) {
 				Limit(3).Find(&itemData)
 			location[i].Merchant.Merchandise = &itemData
 		}
+		filteredLocation = append(filteredLocation, location[i])
+	}
+	if filteredLocation == nil {
+		location = []models.CustomLocation{}
+	} else {
+		location = filteredLocation
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "your location", "data": location})
 }
