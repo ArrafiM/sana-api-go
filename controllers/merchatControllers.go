@@ -109,6 +109,9 @@ func CreateMerchant(c *gin.Context) {
 		Picture:     url,
 		Color:       Color,
 	}
+	if payload.Status != nil {
+		merchant.Status = *payload.Status
+	}
 
 	db.CON.Create(&merchant)
 	// broadCastMerchant(userId)
