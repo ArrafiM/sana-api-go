@@ -23,6 +23,7 @@ func AllChat(c *gin.Context) {
 	readMsg := c.Query("readmsg")
 	if roomid != "" {
 		db.CON.Where("chatroom_id = ?", roomid).
+			Preload("File").
 			Scopes(db.Paginate(page, pageSize)).
 			Order("created_at desc").
 			Find(&chats)
@@ -121,7 +122,7 @@ func StoreChat(c *gin.Context) {
 		return
 	}
 
-	if err := c.ShouldBindJSON(&chat); err != nil {
+	if err := c.ShouldBind(&chat); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
@@ -156,6 +157,19 @@ func StoreChat(c *gin.Context) {
 		ReceiverID: fmt.Sprintf("user%s", strconv.Itoa(int(chat.ReceiverId))),
 		Content:    fmt.Sprintf("chatRoomId%s", strconv.Itoa(int(roomid))),
 	}
+	//upload file if exist
+	file, err := c.FormFile("file")
+	if err == nil {
+		path := "chatattachment"
+		url := fileUrl(file, path)
+		c.SaveUploadedFile(file, "public/"+url)
+		newFile := models.ChatAttachment{
+			ChatID: newChat.ID,
+			Url:    url,
+		}
+		db.CON.Create(&newFile)
+	}
+
 	BroadcastMessage(msg)
 	//send back to sender
 	// msg.ReceiverID = fmt.Sprintf("user%s", strconv.Itoa(int(userId)))
